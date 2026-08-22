@@ -7,7 +7,9 @@ const postRoutes = require('./routes/posts');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-connectDB();
+connectDB().catch((err) => {
+  console.error('Initial database connection warning:', err.message);
+});
 
 app.use(cors());
 app.use(express.json());
@@ -20,9 +22,13 @@ app.get('/', (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
