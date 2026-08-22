@@ -1,67 +1,83 @@
 import React from 'react';
 
 function PostItem({ post, onEdit, onDelete }) {
-  if (!post || typeof post !== 'object') {
-    return null;
-  }
+  if (!post) return null;
 
-  const formatDate = (dateValue) => {
-    if (!dateValue) return '';
+  const formatDisplayDate = (dateStr) => {
+    if (!dateStr) return '';
     try {
-      if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateValue)) {
-        const parts = dateValue.substring(0, 10).split('-');
-        const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-        if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          });
-        }
-      }
-      const date = new Date(dateValue);
-      return isNaN(date.getTime())
-        ? ''
-        : date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          });
-    } catch (e) {
-      return '';
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return dateStr;
     }
   };
 
-  const formattedDate = formatDate(post.publishedDate);
+  const handleDeleteClick = () => {
+    const isConfirmed = window.confirm(`Are you sure you want to delete "${post.title}"?`);
+    if (isConfirmed) {
+      onDelete(post._id);
+    }
+  };
 
   return (
-    <div className="card h-100 shadow-sm">
-      <div className="card-body">
-        <h5 className="card-title text-primary fw-bold">{post.title || 'Untitled Post'}</h5>
-        <h6 className="card-subtitle mb-2 text-muted small">
-          By <strong>{post.author || 'Anonymous'}</strong> {formattedDate ? `• ${formattedDate}` : ''}
-        </h6>
-        <p className="card-text" style={{ whiteSpace: 'pre-wrap' }}>
+    <article className="simple-card post-card p-3 d-flex flex-column h-100">
+      <div className="flex-grow-1 p-2">
+        <h5 className="card-title-custom mb-2">
+          {post.title || 'Untitled Post'}
+        </h5>
+
+        <div className="post-meta d-flex align-items-center gap-2 mb-3">
+          <span className="d-inline-flex align-items-center gap-1">
+            <i className="bi bi-person text-secondary"></i>
+            <strong className="text-dark">{post.author || 'Anonymous'}</strong>
+          </span>
+
+          {post.publishedDate && (
+            <>
+              <span className="text-muted">•</span>
+              <span className="d-inline-flex align-items-center gap-1 text-muted">
+                <i className="bi bi-calendar3"></i> {formatDisplayDate(post.publishedDate)}
+              </span>
+            </>
+          )}
+        </div>
+
+        <p className="post-content">
           {post.content || ''}
         </p>
       </div>
-      <div className="card-footer bg-white border-top-0 d-flex justify-content-end gap-2 pb-3">
+
+      <div className="pt-2 px-2 pb-1 border-top d-flex justify-content-end gap-2 mt-auto">
         <button
           type="button"
-          className="btn btn-sm btn-outline-primary"
-          onClick={() => onEdit && onEdit(post)}
+          className="btn-icon-simple"
+          onClick={() => {
+            onEdit(post);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          title="Edit Post"
+          aria-label="Edit post"
         >
-          Edit
+          <i className="bi bi-pencil"></i>
         </button>
+
         <button
           type="button"
-          className="btn btn-sm btn-outline-danger"
-          onClick={() => onDelete && onDelete(post._id)}
+          className="btn-icon-simple btn-delete"
+          onClick={handleDeleteClick}
+          title="Delete Post"
+          aria-label="Delete post"
         >
-          Delete
+          <i className="bi bi-trash3"></i>
         </button>
       </div>
-    </div>
+    </article>
   );
 }
 

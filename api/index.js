@@ -1,37 +1,34 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 require('dotenv').config();
-const connectDB = require('../backend/config/db');
-const postRoutes = require('../backend/routes/posts');
+
+const connectDB = require('../backend/db/db');
+const postRoutes = require('../backend/routes/postRoutes');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Ensure MongoDB is connected before handling requests
+let isConnected = false;
 app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    console.error('Serverless DB connection error:', err.message);
-    return res.status(500).json({
-      message: 'Failed to connect to MongoDB database',
-      error: err.message,
-    });
+  if (!isConnected && mongoose.connection.readyState < 1) {
+    try {
+      await connectDB();
+      isConnected = true;
+    } catch (err) {
+      console.error('Serverless DB connection error:', err.message);
+      return res.status(500).json({ message: 'Database connection failed', error: err.message });
+    }
   }
+  next();
 });
 
 app.use('/api/posts', postRoutes);
 
 app.get('/api', (req, res) => {
   res.json({ message: 'Blog Post Manager API is running on Vercel!' });
-});
-
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal Server Error', error: err.message });
 });
 
 module.exports = app;

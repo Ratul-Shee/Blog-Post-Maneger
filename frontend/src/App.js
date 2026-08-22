@@ -1,45 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Navbar from './components/Navbar';
 import PostForm from './components/PostForm';
 import PostList from './components/PostList';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL
+const API_URL = process.env.REACT_APP_API_URL
   ? `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/api/posts`
   : '/api/posts';
 
 function App() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
-  // 1. Fetch posts from the backend server
+  const showNotification = (msg, isError = false) => {
+    if (isError) {
+      setErrorMessage(msg);
+      setTimeout(() => setErrorMessage(''), 4000);
+    } else {
+      setSuccessMessage(msg);
+      setTimeout(() => setSuccessMessage(''), 4000);
+    }
+  };
+
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(API_BASE_URL);
-      
-      if (Array.isArray(response.data)) {
-        setPosts(response.data);
-        setError('');
-      } else {
-        setPosts([]);
-        setError(
-          response.data?.message || 'Received unexpected response from API server.'
-        );
-      }
-    } catch (err) {
-      setPosts([]);
-      const errMsg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message ||
-        'Could not load posts.';
-      
-      setError(
-        `${errMsg} (If this is MongoDB Atlas, make sure Network Access allows IP "0.0.0.0/0" for Vercel cloud deployments)`
+      const response = await axios.get(API_URL);
+      setPosts(response.data);
+      setErrorMessage('');
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      showNotification(
+        error.response?.data?.message || 'Failed to connect to backend server. Make sure the backend is running.',
+        true
       );
-      console.error('Error fetching posts:', err);
     } finally {
       setLoading(false);
     }
@@ -47,121 +46,105 @@ function App() {
 
   useEffect(() => {
     fetchPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2. Add a new post
   const handleCreatePost = async (postData) => {
     try {
-      const response = await axios.post(API_BASE_URL, postData);
-      if (response.data && typeof response.data === 'object' && response.data._id) {
-        setPosts((prevPosts) => [response.data, ...(Array.isArray(prevPosts) ? prevPosts : [])]);
-        setError('');
-      } else {
-        fetchPosts();
-      }
-    } catch (err) {
-      const errMsg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message;
-      alert(`Failed to add post: ${errMsg}\n\nNote: If using MongoDB Atlas, check that Network Access includes "0.0.0.0/0" (Allow Access from Anywhere).`);
+      setIsSubmitting(true);
+      const response = await axios.post(API_URL, postData);
+      setPosts([response.data, ...posts]);
+      showNotification('Post published successfully!');
+    } catch (error) {
+      console.error('Error creating post:', error);
+      showNotification(error.response?.data?.message || 'Error publishing post', true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // 3. Update an existing post
-  const handleUpdatePost = async (id, postData) => {
+  const handleUpdatePost = async (postData) => {
+    if (!editingPost) return;
     try {
-      const response = await axios.put(`${API_BASE_URL}/${id}`, postData);
-      if (response.data && typeof response.data === 'object' && response.data._id) {
-        setPosts((prevPosts) =>
-          (Array.isArray(prevPosts) ? prevPosts : []).map((post) =>
-            post._id === id ? response.data : post
-          )
-        );
-        setEditingPost(null);
-        setError('');
-      } else {
-        fetchPosts();
-      }
-    } catch (err) {
-      const errMsg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message;
-      alert(`Failed to update post: ${errMsg}`);
+      setIsSubmitting(true);
+      const response = await axios.put(`${API_URL}/${editingPost._id}`, postData);
+      setPosts(posts.map((p) => (p._id === editingPost._id ? response.data : p)));
+      setEditingPost(null);
+      showNotification('Post updated successfully!');
+    } catch (error) {
+      console.error('Error updating post:', error);
+      showNotification(error.response?.data?.message || 'Error updating post', true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // 4. Delete a post
   const handleDeletePost = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this post?')) {
-      return;
-    }
-
     try {
-      await axios.delete(`${API_BASE_URL}/${id}`);
-      setPosts((prevPosts) =>
-        (Array.isArray(prevPosts) ? prevPosts : []).filter((post) => post._id !== id)
-      );
-    } catch (err) {
-      const errMsg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message;
-      alert(`Failed to delete post: ${errMsg}`);
+      await axios.delete(`${API_URL}/${id}`);
+      setPosts(posts.filter((p) => p._id !== id));
+      showNotification('Post deleted successfully.');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      showNotification(error.response?.data?.message || 'Error deleting post', true);
     }
   };
 
   return (
-    <div className="bg-light min-vh-100 pb-5">
-      {/* Standard Bootstrap Navbar */}
-      <nav className="navbar navbar-dark bg-dark mb-4 shadow-sm">
-        <div className="container">
-          <span className="navbar-brand h1 mb-0 fw-bold">Blog Post Manager</span>
-        </div>
-      </nav>
+    <div className="d-flex flex-column min-vh-100">
+      <Navbar postCount={posts.length} />
 
-      {/* Main Container */}
-      <div className="container">
-        {/* Error message */}
-        {error && (
-          <div className="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <div>
-              <strong>Database Notice: </strong>
-              {error}
-            </div>
+      <main className="container flex-grow-1 pb-5">
+        {successMessage && (
+          <div className="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i className="bi bi-check-circle-fill me-2"></i>
+            <span>{successMessage}</span>
             <button
               type="button"
               className="btn-close"
-              onClick={() => setError('')}
+              onClick={() => setSuccessMessage('')}
+              aria-label="Close"
             ></button>
           </div>
         )}
 
-        {/* Side-by-side layout using Bootstrap Grid */}
-        <div className="row g-4">
-          {/* Left Column: Form */}
-          <div className="col-12 col-md-5">
+        {errorMessage && (
+          <div className="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i className="bi bi-exclamation-circle-fill me-2"></i>
+            <strong>Notice: </strong>
+            <span>{errorMessage}</span>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setErrorMessage('')}
+              aria-label="Close"
+            ></button>
+          </div>
+        )}
+
+        <div className="row g-4 g-xl-5 align-items-start">
+          <div className="col-12 col-lg-5">
             <PostForm
-              onSubmit={handleCreatePost}
-              onUpdate={handleUpdatePost}
+              onSubmit={editingPost ? handleUpdatePost : handleCreatePost}
               editingPost={editingPost}
-              onCancel={() => setEditingPost(null)}
-              loading={loading}
+              onCancelEdit={() => setEditingPost(null)}
+              isSubmitting={isSubmitting}
             />
           </div>
 
-          {/* Right Column: Post List */}
-          <div className="col-12 col-md-7">
+          <div className="col-12 col-lg-7">
             <PostList
               posts={posts}
               loading={loading}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
               onEdit={(post) => setEditingPost(post)}
               onDelete={handleDeletePost}
+              onRefresh={fetchPosts}
             />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

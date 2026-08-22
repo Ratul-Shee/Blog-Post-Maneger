@@ -1,152 +1,147 @@
 import React, { useState, useEffect } from 'react';
 
-// Helper to get local system date in YYYY-MM-DD format
-const getSystemDate = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-// Helper to format date string for HTML date input (YYYY-MM-DD)
-const formatDateForInput = (dateValue) => {
-  if (!dateValue) return getSystemDate();
-  if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateValue)) {
-    return dateValue.substring(0, 10);
-  }
-  const date = new Date(dateValue);
-  if (isNaN(date.getTime())) return getSystemDate();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-function PostForm({ onSubmit, onUpdate, editingPost, onCancel, loading }) {
+function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [publishedDate, setPublishedDate] = useState(getSystemDate());
+  const [publishedDate, setPublishedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
   const [content, setContent] = useState('');
 
-  // If editingPost changes, populate the form inputs
   useEffect(() => {
     if (editingPost) {
       setTitle(editingPost.title || '');
       setAuthor(editingPost.author || '');
-      setPublishedDate(formatDateForInput(editingPost.publishedDate));
+      setPublishedDate(
+        editingPost.publishedDate
+          ? editingPost.publishedDate.split('T')[0]
+          : new Date().toISOString().split('T')[0]
+      );
       setContent(editingPost.content || '');
     } else {
-      setTitle('');
-      setAuthor('');
-      setPublishedDate(getSystemDate());
-      setContent('');
+      resetForm();
     }
   }, [editingPost]);
+
+  const resetForm = () => {
+    setTitle('');
+    setAuthor('');
+    setPublishedDate(new Date().toISOString().split('T')[0]);
+    setContent('');
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!title || !author || !content) {
-      alert('Please fill in all fields.');
+    if (!title.trim() || !author.trim() || !content.trim()) {
+      alert('Please fill in all required fields: Title, Author, and Content.');
       return;
     }
 
     const postData = {
-      title,
-      author,
-      publishedDate: publishedDate || getSystemDate(),
-      content
+      title: title.trim(),
+      author: author.trim(),
+      publishedDate,
+      content: content.trim(),
     };
 
-    if (editingPost) {
-      onUpdate(editingPost._id, postData);
-    } else {
-      onSubmit(postData);
-      setTitle('');
-      setAuthor('');
-      setPublishedDate(getSystemDate());
-      setContent('');
+    onSubmit(postData);
+
+    if (!editingPost) {
+      resetForm();
     }
   };
 
   return (
-    <div className="card shadow-sm">
-      <div className="card-header bg-white">
-        <h5 className="mb-0 text-primary fw-bold">
+    <div className="simple-card p-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0 fw-bold text-dark">
           {editingPost ? 'Edit Post' : 'Create New Post'}
         </h5>
+        {editingPost && (
+          <span className="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">
+            Editing Mode
+          </span>
+        )}
       </div>
-      <div className="card-body">
-        <form onSubmit={handleSubmit}>
-          {/* Title */}
-          <div className="mb-3">
-            <label className="form-label fw-bold">Title</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Enter title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
 
-          {/* Author */}
-          <div className="mb-3">
-            <label className="form-label fw-bold">Author</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Enter author name"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              required
-            />
-          </div>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-3">
+          <label className="form-label-simple">Title *</label>
+          <input
+            type="text"
+            className="form-control-simple"
+            placeholder="Enter post title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </div>
 
-          {/* Published Date */}
-          <div className="mb-3">
-            <label className="form-label fw-bold">Published Date</label>
-            <input
-              type="date"
-              className="form-control"
-              value={publishedDate}
-              onChange={(e) => setPublishedDate(e.target.value)}
-              required
-            />
-          </div>
+        <div className="mb-3">
+          <label className="form-label-simple">Author *</label>
+          <input
+            type="text"
+            className="form-control-simple"
+            placeholder="Enter author name"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            required
+          />
+        </div>
 
-          {/* Content */}
-          <div className="mb-3">
-            <label className="form-label fw-bold">Content</label>
-            <textarea
-              className="form-control"
-              rows="5"
-              placeholder="Write content here..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              required
-            ></textarea>
-          </div>
+        <div className="mb-3">
+          <label className="form-label-simple">Published Date</label>
+          <input
+            type="date"
+            className="form-control-simple"
+            value={publishedDate}
+            onChange={(e) => setPublishedDate(e.target.value)}
+          />
+        </div>
 
-          {/* Buttons */}
-          <div className="d-flex gap-2">
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {editingPost ? 'Update Post' : 'Publish Post'}
-            </button>
-            {editingPost && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={onCancel}
-              >
-                Cancel
-              </button>
+        <div className="mb-3">
+          <label className="form-label-simple">Content *</label>
+          <textarea
+            className="form-control-simple"
+            rows="5"
+            placeholder="Write post content here..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+          ></textarea>
+        </div>
+
+        <div className="d-flex gap-2 pt-1">
+          <button
+            type="submit"
+            className="btn-primary-simple flex-grow-1"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                Saving...
+              </>
+            ) : editingPost ? (
+              'Update Post'
+            ) : (
+              'Publish Post'
             )}
-          </div>
-        </form>
-      </div>
+          </button>
+
+          {editingPost && (
+            <button
+              type="button"
+              className="btn-secondary-simple"
+              onClick={onCancelEdit}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
     </div>
   );
 }
