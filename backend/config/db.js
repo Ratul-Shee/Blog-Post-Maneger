@@ -3,30 +3,35 @@ const mongoose = require('mongoose');
 const DEFAULT_MONGODB_URI =
   'mongodb+srv://ratulshee6_db_user:Il5V1FFpqrQIa7jP@cluster0.bma8xyb.mongodb.net/blog-manager?retryWrites=true&w=majority';
 
-let cachedConnection = null;
+let cachedPromise = null;
 
 const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) {
     return mongoose.connection;
   }
 
-  if (cachedConnection) {
-    return cachedConnection;
+  if (!cachedPromise) {
+    const mongoURI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
+    const opts = {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+    };
+
+    cachedPromise = mongoose
+      .connect(mongoURI, opts)
+      .then((mongooseInstance) => {
+        console.log('MongoDB Connected to Atlas successfully');
+        return mongooseInstance;
+      })
+      .catch((err) => {
+        cachedPromise = null;
+        console.error(`Error connecting to MongoDB Atlas: ${err.message}`);
+        throw err;
+      });
   }
 
-  const mongoURI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
-
-  try {
-    const conn = await mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 5000,
-    });
-    cachedConnection = conn;
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    return conn;
-  } catch (error) {
-    console.error(`Error connecting to MongoDB: ${error.message}`);
-    throw error;
-  }
+  return cachedPromise;
 };
 
 module.exports = connectDB;

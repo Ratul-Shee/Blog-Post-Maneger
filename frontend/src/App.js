@@ -19,21 +19,26 @@ function App() {
       setLoading(true);
       const response = await axios.get(API_BASE_URL);
       
-      // Ensure response.data is an array before setting posts
       if (Array.isArray(response.data)) {
         setPosts(response.data);
         setError('');
       } else {
-        // If API returned HTML or an error object (e.g. proxy/rewrite failure)
         setPosts([]);
         setError(
-          'Could not connect to the backend API. If deployed on Vercel, please ensure REACT_APP_API_URL is configured in your Vercel Environment Variables to point to your live backend server.'
+          response.data?.message || 'Received unexpected response from API server.'
         );
-        console.warn('API returned non-array response:', response.data);
       }
     } catch (err) {
       setPosts([]);
-      setError('Could not load posts. Please make sure the backend server is running.');
+      const errMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Could not load posts.';
+      
+      setError(
+        `${errMsg} (If this is MongoDB Atlas, make sure Network Access allows IP "0.0.0.0/0" for Vercel cloud deployments)`
+      );
       console.error('Error fetching posts:', err);
     } finally {
       setLoading(false);
@@ -50,11 +55,16 @@ function App() {
       const response = await axios.post(API_BASE_URL, postData);
       if (response.data && typeof response.data === 'object' && response.data._id) {
         setPosts((prevPosts) => [response.data, ...(Array.isArray(prevPosts) ? prevPosts : [])]);
+        setError('');
       } else {
         fetchPosts();
       }
     } catch (err) {
-      alert('Failed to add post. ' + (err.response?.data?.message || err.message));
+      const errMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message;
+      alert(`Failed to add post: ${errMsg}\n\nNote: If using MongoDB Atlas, check that Network Access includes "0.0.0.0/0" (Allow Access from Anywhere).`);
     }
   };
 
@@ -69,11 +79,16 @@ function App() {
           )
         );
         setEditingPost(null);
+        setError('');
       } else {
         fetchPosts();
       }
     } catch (err) {
-      alert('Failed to update post. ' + (err.response?.data?.message || err.message));
+      const errMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message;
+      alert(`Failed to update post: ${errMsg}`);
     }
   };
 
@@ -89,7 +104,11 @@ function App() {
         (Array.isArray(prevPosts) ? prevPosts : []).filter((post) => post._id !== id)
       );
     } catch (err) {
-      alert('Failed to delete post. ' + (err.response?.data?.message || err.message));
+      const errMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message;
+      alert(`Failed to delete post: ${errMsg}`);
     }
   };
 
@@ -108,7 +127,7 @@ function App() {
         {error && (
           <div className="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
             <div>
-              <strong>Notice: </strong>
+              <strong>Database Notice: </strong>
               {error}
             </div>
             <button
