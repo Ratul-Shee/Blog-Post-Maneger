@@ -3,7 +3,9 @@ import axios from 'axios';
 import PostForm from './components/PostForm';
 import PostList from './components/PostList';
 
-const API_BASE_URL = '/api/posts';
+const API_BASE_URL = process.env.REACT_APP_API_URL
+  ? `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/api/posts`
+  : '/api/posts';
 
 function App() {
   const [posts, setPosts] = useState([]);

@@ -1,0 +1,11 @@
+{
+  "name": "blog-post-manager",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "node backend/server.js",
+    "frontend": "cd frontend && npm start",
+    "backend": "cd backend && npm start"
+  }
+}
