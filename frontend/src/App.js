@@ -18,9 +18,21 @@ function App() {
     try {
       setLoading(true);
       const response = await axios.get(API_BASE_URL);
-      setPosts(response.data);
-      setError('');
+      
+      // Ensure response.data is an array before setting posts
+      if (Array.isArray(response.data)) {
+        setPosts(response.data);
+        setError('');
+      } else {
+        // If API returned HTML or an error object (e.g. proxy/rewrite failure)
+        setPosts([]);
+        setError(
+          'Could not connect to the backend API. If deployed on Vercel, please ensure REACT_APP_API_URL is configured in your Vercel Environment Variables to point to your live backend server.'
+        );
+        console.warn('API returned non-array response:', response.data);
+      }
     } catch (err) {
+      setPosts([]);
       setError('Could not load posts. Please make sure the backend server is running.');
       console.error('Error fetching posts:', err);
     } finally {
@@ -36,7 +48,11 @@ function App() {
   const handleCreatePost = async (postData) => {
     try {
       const response = await axios.post(API_BASE_URL, postData);
-      setPosts((prevPosts) => [response.data, ...prevPosts]);
+      if (response.data && typeof response.data === 'object' && response.data._id) {
+        setPosts((prevPosts) => [response.data, ...(Array.isArray(prevPosts) ? prevPosts : [])]);
+      } else {
+        fetchPosts();
+      }
     } catch (err) {
       alert('Failed to add post. ' + (err.response?.data?.message || err.message));
     }
@@ -46,10 +62,16 @@ function App() {
   const handleUpdatePost = async (id, postData) => {
     try {
       const response = await axios.put(`${API_BASE_URL}/${id}`, postData);
-      setPosts((prevPosts) =>
-        prevPosts.map((post) => (post._id === id ? response.data : post))
-      );
-      setEditingPost(null);
+      if (response.data && typeof response.data === 'object' && response.data._id) {
+        setPosts((prevPosts) =>
+          (Array.isArray(prevPosts) ? prevPosts : []).map((post) =>
+            post._id === id ? response.data : post
+          )
+        );
+        setEditingPost(null);
+      } else {
+        fetchPosts();
+      }
     } catch (err) {
       alert('Failed to update post. ' + (err.response?.data?.message || err.message));
     }
@@ -63,7 +85,9 @@ function App() {
 
     try {
       await axios.delete(`${API_BASE_URL}/${id}`);
-      setPosts((prevPosts) => prevPosts.filter((post) => post._id !== id));
+      setPosts((prevPosts) =>
+        (Array.isArray(prevPosts) ? prevPosts : []).filter((post) => post._id !== id)
+      );
     } catch (err) {
       alert('Failed to delete post. ' + (err.response?.data?.message || err.message));
     }
@@ -82,8 +106,11 @@ function App() {
       <div className="container">
         {/* Error message */}
         {error && (
-          <div className="alert alert-danger alert-dismissible fade show" role="alert">
-            {error}
+          <div className="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <div>
+              <strong>Notice: </strong>
+              {error}
+            </div>
             <button
               type="button"
               className="btn-close"
