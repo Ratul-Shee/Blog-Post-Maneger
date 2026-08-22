@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const getSystemDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const postSchema = new mongoose.Schema(
   {
     title: {
@@ -19,7 +27,7 @@ const postSchema = new mongoose.Schema(
     },
     publishedDate: {
       type: String,
-      default: () => new Date().toISOString().split('T')[0],
+      default: getSystemDate,
     },
     category: {
       type: String,
@@ -28,7 +36,7 @@ const postSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

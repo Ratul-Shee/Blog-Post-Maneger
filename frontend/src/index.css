@@ -81,6 +81,14 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+  word-wrap: break-word;
+}
+
+.post-card {
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .post-card:hover {
@@ -95,11 +103,15 @@ body {
   color: var(--text-dark);
   line-height: 1.4;
   margin-bottom: 0.4rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .post-meta {
   font-size: 0.825rem;
   color: var(--text-muted);
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .post-content {
@@ -107,6 +119,8 @@ body {
   font-size: 0.925rem;
   line-height: 1.6;
   white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   margin-bottom: 0;
 }
 

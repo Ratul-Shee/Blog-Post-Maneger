@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
+const getSystemDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [publishedDate, setPublishedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  const [publishedDate, setPublishedDate] = useState(getSystemDate());
   const [content, setContent] = useState('');
 
   useEffect(() => {
@@ -15,7 +21,7 @@ function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
       setPublishedDate(
         editingPost.publishedDate
           ? editingPost.publishedDate.split('T')[0]
-          : new Date().toISOString().split('T')[0]
+          : getSystemDate()
       );
       setContent(editingPost.content || '');
     } else {
@@ -26,7 +32,7 @@ function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
   const resetForm = () => {
     setTitle('');
     setAuthor('');
-    setPublishedDate(new Date().toISOString().split('T')[0]);
+    setPublishedDate(getSystemDate());
     setContent('');
   };
 
@@ -41,7 +47,7 @@ function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
     const postData = {
       title: title.trim(),
       author: author.trim(),
-      publishedDate,
+      publishedDate: publishedDate || getSystemDate(),
       content: content.trim(),
     };
 

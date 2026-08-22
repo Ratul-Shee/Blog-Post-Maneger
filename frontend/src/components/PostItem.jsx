@@ -6,6 +6,15 @@ function PostItem({ post, onEdit, onDelete }) {
   const formatDisplayDate = (dateStr) => {
     if (!dateStr) return '';
     try {
+      if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
+      }
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) return dateStr;
       return date.toLocaleDateString('en-US', {
@@ -26,8 +35,8 @@ function PostItem({ post, onEdit, onDelete }) {
   };
 
   return (
-    <article className="simple-card post-card p-3 d-flex flex-column h-100">
-      <div className="flex-grow-1 p-2">
+    <article className="simple-card post-card p-3 d-flex flex-column h-100 w-100">
+      <div className="flex-grow-1 p-2" style={{ minWidth: 0 }}>
         <h5 className="card-title-custom mb-2">
           {post.title || 'Untitled Post'}
         </h5>

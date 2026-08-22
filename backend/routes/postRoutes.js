@@ -2,6 +2,15 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 
+const getSystemDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+
 router.get('/', async (req, res) => {
   try {
     const { search } = req.query;
@@ -38,12 +47,10 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-
 router.post('/', async (req, res) => {
   try {
     const { title, author, content, publishedDate, category } = req.body;
 
-    // Basic validation
     if (!title || !author || !content) {
       return res.status(400).json({ message: 'Title, Author, and Content are required fields' });
     }
@@ -52,7 +59,7 @@ router.post('/', async (req, res) => {
       title: title.trim(),
       author: author.trim(),
       content: content.trim(),
-      publishedDate: publishedDate || new Date().toISOString().split('T')[0],
+      publishedDate: publishedDate || getSystemDate(),
       category: category || 'General',
     });
 
@@ -74,7 +81,7 @@ router.put('/:id', async (req, res) => {
         title,
         author,
         content,
-        publishedDate,
+        publishedDate: publishedDate || getSystemDate(),
         category,
       },
       { new: true, runValidators: true }
