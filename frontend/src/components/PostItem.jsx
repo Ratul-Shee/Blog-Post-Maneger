@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 function PostItem({ post, onEdit, onDelete }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!post) return null;
+
+  const contentText = post.content || '';
+  const isLongContent = contentText.length > 130;
 
   const formatDisplayDate = (dateStr) => {
     if (!dateStr) return '';
@@ -58,9 +63,30 @@ function PostItem({ post, onEdit, onDelete }) {
           )}
         </div>
 
-        <p className="post-content clamp-3">
-          {post.content || ''}
+        <p className={`post-content ${isExpanded ? 'expanded' : 'clamp-3'}`}>
+          {contentText}
         </p>
+
+        {isLongContent && (
+          <button
+            type="button"
+            className="btn-read-more"
+            onClick={() => setIsExpanded(!isExpanded)}
+            aria-expanded={isExpanded}
+          >
+            {isExpanded ? (
+              <>
+                <span>Show less</span>
+                <i className="bi bi-chevron-up"></i>
+              </>
+            ) : (
+              <>
+                <span>Read more</span>
+                <i className="bi bi-chevron-down"></i>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       <div className="pt-2 px-2 pb-1 border-top d-flex justify-content-end gap-2 mt-auto">
