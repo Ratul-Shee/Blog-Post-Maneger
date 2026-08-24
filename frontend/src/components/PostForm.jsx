@@ -8,23 +8,9 @@ const getSystemDate = () => {
   return `${year}-${month}-${day}`;
 };
 
-const CATEGORIES = [
-  'General',
-  'Technology',
-  'Artificial Intelligence',
-  'Web Development',
-  'Crypto & Finance',
-  'Engineering',
-  'Design',
-  'Mobile Development',
-  'Cybersecurity',
-  'Cloud & DevOps',
-];
-
 function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [category, setCategory] = useState('General');
   const [publishedDate, setPublishedDate] = useState(getSystemDate());
   const [content, setContent] = useState('');
 
@@ -32,7 +18,6 @@ function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
     if (editingPost) {
       setTitle(editingPost.title || '');
       setAuthor(editingPost.author || '');
-      setCategory(editingPost.category || 'General');
       setPublishedDate(
         editingPost.publishedDate
           ? editingPost.publishedDate.split('T')[0]
@@ -47,7 +32,6 @@ function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
   const resetForm = () => {
     setTitle('');
     setAuthor('');
-    setCategory('General');
     setPublishedDate(getSystemDate());
     setContent('');
   };
@@ -63,7 +47,6 @@ function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
     const postData = {
       title: title.trim(),
       author: author.trim(),
-      category: category.trim() || 'General',
       publishedDate: publishedDate || getSystemDate(),
       content: content.trim(),
     };
@@ -113,31 +96,14 @@ function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
           />
         </div>
 
-        <div className="row g-2 mb-3">
-          <div className="col-12 col-sm-6">
-            <label className="form-label-simple">Category</label>
-            <select
-              className="form-control-simple"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-12 col-sm-6">
-            <label className="form-label-simple">Published Date</label>
-            <input
-              type="date"
-              className="form-control-simple"
-              value={publishedDate}
-              onChange={(e) => setPublishedDate(e.target.value)}
-            />
-          </div>
+        <div className="mb-3">
+          <label className="form-label-simple">Published Date</label>
+          <input
+            type="date"
+            className="form-control-simple"
+            value={publishedDate}
+            onChange={(e) => setPublishedDate(e.target.value)}
+          />
         </div>
 
         <div className="mb-3">

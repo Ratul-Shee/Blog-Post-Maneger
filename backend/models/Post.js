@@ -29,11 +29,6 @@ const postSchema = new mongoose.Schema(
       type: String,
       default: getSystemDate,
     },
-    category: {
-      type: String,
-      default: 'General',
-      trim: true,
-    },
   },
   {
     timestamps: true,

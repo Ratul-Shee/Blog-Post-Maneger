@@ -57,7 +57,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { title, author, content, publishedDate, category } = req.body;
+    const { title, author, content, publishedDate } = req.body;
 
     if (
       !title ||
@@ -75,7 +75,6 @@ router.post('/', async (req, res) => {
       author: author.toString().trim(),
       content: content.toString().trim(),
       publishedDate: publishedDate || getSystemDate(),
-      category: category ? category.toString().trim() : 'General',
     });
 
     const savedPost = await newPost.save();
@@ -91,7 +90,7 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    const { title, author, content, publishedDate, category } = req.body;
+    const { title, author, content, publishedDate } = req.body;
 
     if (
       !title ||
@@ -111,7 +110,6 @@ router.put('/:id', async (req, res) => {
         author: author.toString().trim(),
         content: content.toString().trim(),
         publishedDate: publishedDate || getSystemDate(),
-        category: category ? category.toString().trim() : 'General',
       },
       { new: true, runValidators: true }
     );

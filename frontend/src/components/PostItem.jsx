@@ -38,14 +38,6 @@ function PostItem({ post, onEdit, onDelete }) {
   return (
     <article className="simple-card post-card p-3 d-flex flex-column h-100 w-100">
       <div className="flex-grow-1 p-2" style={{ minWidth: 0 }}>
-        {post.category && (
-          <div className="mb-2">
-            <span className="category-badge">
-              <i className="bi bi-tag-fill"></i> {post.category}
-            </span>
-          </div>
-        )}
-
         <h5 className="card-title-custom mb-2">
           {post.title || 'Untitled Post'}
         </h5>
