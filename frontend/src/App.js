@@ -137,7 +137,7 @@ function App() {
         )}
 
         <div className="row g-4 g-xl-5 align-items-start">
-          <div className="col-12 col-lg-5">
+          <div className="col-12 col-lg-5 sticky-sidebar">
             <PostForm
               onSubmit={editingPost ? handleUpdatePost : handleCreatePost}
               editingPost={editingPost}

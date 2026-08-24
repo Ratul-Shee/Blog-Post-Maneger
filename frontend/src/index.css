@@ -294,3 +294,24 @@ body {
   font-weight: 500;
   color: var(--text-dark);
 }
+
+/* Sticky Sidebar for Form */
+@media (min-width: 992px) {
+  .sticky-sidebar {
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .sticky-sidebar::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .sticky-sidebar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+  }
+}
