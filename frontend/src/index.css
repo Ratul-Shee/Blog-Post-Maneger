@@ -124,6 +124,19 @@ body {
   margin-bottom: 0;
 }
 
+.category-badge {
+  font-size: 0.725rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  letter-spacing: 0.02em;
+}
+
 /* Form Controls */
 .form-label-simple {
   font-size: 0.85rem;
@@ -243,6 +256,7 @@ body {
 .clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
