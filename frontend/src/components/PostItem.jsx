@@ -6,8 +6,9 @@ function PostItem({ post, onEdit, onDelete }) {
   const formatDisplayDate = (dateStr) => {
     if (!dateStr) return '';
     try {
-      if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-        const [y, m, d] = dateStr.split('-').map(Number);
+      const cleanDate = typeof dateStr === 'string' ? dateStr.split('T')[0] : dateStr;
+      if (typeof cleanDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(cleanDate)) {
+        const [y, m, d] = cleanDate.split('-').map(Number);
         const date = new Date(y, m - 1, d);
         return date.toLocaleDateString('en-US', {
           year: 'numeric',
@@ -16,14 +17,14 @@ function PostItem({ post, onEdit, onDelete }) {
         });
       }
       const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return dateStr;
+      if (isNaN(date.getTime())) return String(dateStr);
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
       });
     } catch {
-      return dateStr;
+      return String(dateStr);
     }
   };
 

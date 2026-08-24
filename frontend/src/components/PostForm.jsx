@@ -36,7 +36,7 @@ function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
     setContent('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!title.trim() || !author.trim() || !content.trim()) {
@@ -51,9 +51,9 @@ function PostForm({ onSubmit, editingPost, onCancelEdit, isSubmitting }) {
       content: content.trim(),
     };
 
-    onSubmit(postData);
+    const success = await onSubmit(postData);
 
-    if (!editingPost) {
+    if (success && !editingPost) {
       resetForm();
     }
   };

@@ -4,9 +4,14 @@ import Navbar from './components/Navbar';
 import PostForm from './components/PostForm';
 import PostList from './components/PostList';
 
-const API_URL = process.env.REACT_APP_API_URL
-  ? `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/api/posts`
-  : '/api/posts';
+const getApiUrl = () => {
+  const envUrl = process.env.REACT_APP_API_URL;
+  if (!envUrl) return '/api/posts';
+  const clean = envUrl.replace(/\/$/, '');
+  return clean.endsWith('/api/posts') ? clean : `${clean}/api/posts`;
+};
+
+const API_URL = getApiUrl();
 
 function App() {
   const [posts, setPosts] = useState([]);
@@ -31,7 +36,7 @@ function App() {
     try {
       setLoading(true);
       const response = await axios.get(API_URL);
-      setPosts(response.data);
+      setPosts(Array.isArray(response.data) ? response.data : []);
       setErrorMessage('');
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -53,27 +58,33 @@ function App() {
     try {
       setIsSubmitting(true);
       const response = await axios.post(API_URL, postData);
-      setPosts([response.data, ...posts]);
+      setPosts((prevPosts) => [response.data, ...prevPosts]);
       showNotification('Post published successfully!');
+      return true;
     } catch (error) {
       console.error('Error creating post:', error);
       showNotification(error.response?.data?.message || 'Error publishing post', true);
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleUpdatePost = async (postData) => {
-    if (!editingPost) return;
+    if (!editingPost) return false;
     try {
       setIsSubmitting(true);
       const response = await axios.put(`${API_URL}/${editingPost._id}`, postData);
-      setPosts(posts.map((p) => (p._id === editingPost._id ? response.data : p)));
+      setPosts((prevPosts) =>
+        prevPosts.map((p) => (p._id === editingPost._id ? response.data : p))
+      );
       setEditingPost(null);
       showNotification('Post updated successfully!');
+      return true;
     } catch (error) {
       console.error('Error updating post:', error);
       showNotification(error.response?.data?.message || 'Error updating post', true);
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -82,7 +93,10 @@ function App() {
   const handleDeletePost = async (id) => {
     try {
       await axios.delete(`${API_URL}/${id}`);
-      setPosts(posts.filter((p) => p._id !== id));
+      setPosts((prevPosts) => prevPosts.filter((p) => p._id !== id));
+      if (editingPost && editingPost._id === id) {
+        setEditingPost(null);
+      }
       showNotification('Post deleted successfully.');
     } catch (error) {
       console.error('Error deleting post:', error);

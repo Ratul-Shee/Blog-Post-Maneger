@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Post = require('../models/Post');
 
@@ -10,14 +11,18 @@ const getSystemDate = () => {
   return `${year}-${month}-${day}`;
 };
 
+const escapeRegex = (text) => {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+};
 
 router.get('/', async (req, res) => {
   try {
     const { search } = req.query;
     let query = {};
 
-    if (search) {
-      const searchRegex = new RegExp(search, 'i');
+    if (search && typeof search === 'string' && search.trim() !== '') {
+      const escapedQuery = escapeRegex(search.trim());
+      const searchRegex = new RegExp(escapedQuery, 'i');
       query = {
         $or: [
           { title: searchRegex },
@@ -34,9 +39,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-
 router.get('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
     const post = await Post.findById(req.params.id);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
@@ -51,16 +59,23 @@ router.post('/', async (req, res) => {
   try {
     const { title, author, content, publishedDate, category } = req.body;
 
-    if (!title || !author || !content) {
+    if (
+      !title ||
+      !author ||
+      !content ||
+      !title.toString().trim() ||
+      !author.toString().trim() ||
+      !content.toString().trim()
+    ) {
       return res.status(400).json({ message: 'Title, Author, and Content are required fields' });
     }
 
     const newPost = new Post({
-      title: title.trim(),
-      author: author.trim(),
-      content: content.trim(),
+      title: title.toString().trim(),
+      author: author.toString().trim(),
+      content: content.toString().trim(),
       publishedDate: publishedDate || getSystemDate(),
-      category: category || 'General',
+      category: category ? category.toString().trim() : 'General',
     });
 
     const savedPost = await newPost.save();
@@ -70,19 +85,33 @@ router.post('/', async (req, res) => {
   }
 });
 
-
 router.put('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
     const { title, author, content, publishedDate, category } = req.body;
+
+    if (
+      !title ||
+      !author ||
+      !content ||
+      !title.toString().trim() ||
+      !author.toString().trim() ||
+      !content.toString().trim()
+    ) {
+      return res.status(400).json({ message: 'Title, Author, and Content are required fields' });
+    }
 
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
       {
-        title,
-        author,
-        content,
+        title: title.toString().trim(),
+        author: author.toString().trim(),
+        content: content.toString().trim(),
         publishedDate: publishedDate || getSystemDate(),
-        category,
+        category: category ? category.toString().trim() : 'General',
       },
       { new: true, runValidators: true }
     );
@@ -97,9 +126,12 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-
 router.delete('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
     const deletedPost = await Post.findByIdAndDelete(req.params.id);
 
     if (!deletedPost) {

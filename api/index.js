@@ -11,12 +11,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-let isConnected = false;
 app.use(async (req, res, next) => {
-  if (!isConnected && mongoose.connection.readyState < 1) {
+  if (mongoose.connection.readyState < 1) {
     try {
       await connectDB();
-      isConnected = true;
     } catch (err) {
       console.error('Serverless DB connection error:', err.message);
       return res.status(500).json({ message: 'Database connection failed', error: err.message });
